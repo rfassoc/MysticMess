@@ -142,7 +142,7 @@
   }
   class ChatEvent extends MessengerEvent {
     constructor(author, text) {
-      super(Math.max(text.length * 50, 400));
+      super(Math.max(text.length * 72, 750));
       this.author = author;
       this.text = text;
     }
@@ -179,6 +179,7 @@
     initialMembers: [rfa.yoosung, rfa.seven, rfa.jaehee, rfa.hyun],
     mc: {},
     background: 'night',
+    video: 'COlXAgQ6Cu0',
   };
   const mc = new Member(script.mc.name || 'MC',
     script.mc.colour || 'ffffed',
@@ -211,7 +212,7 @@
 
   // execute script
   (bgs[script.background] || bgs.day).activate();
-  (function prepareExecute(n) {
+  function prepareExecute(n) {
     if (n >= script.events.length) {
       state.done.activate();
       return;
@@ -230,6 +231,17 @@
     } else {
       execute(context.activeEvent);
     }
-  })(0);
+  }
+  function go() {
+    document.getElementById('loader').style.display = 'none';
+    prepareExecute(0);
+  }
+  if (script.video) {
+    const iframe = document.getElementById('youtube-embed');
+    iframe.addEventListener('load', go);
+    iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
+  } else {
+    go();
+  }
 
 })();

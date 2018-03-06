@@ -288,3 +288,28 @@ body {
 #msg-button-text {
     font-size: 11pt;
 }
+
+/*
+ * Invisible youtube player
+ */
+#youtube-container {
+    width: 1px; height: 1px;
+    position: absolute;
+    top: 0; left: 0;
+    opacity: 0.01;
+    overflow: hidden;
+}
+
+/*
+ * Loader screen
+ */
+#loader {
+    width: 100vw; height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+}
+
+#loader-text {
+    font-size: 24pt;
+    font-weight: 900;
+}
