@@ -33,14 +33,14 @@
     }
   }
   const rfa = {
-    luciel: new Member('707', 'fff1f1', 'img/avatar/707.png'),
-    jaehee: new Member('Jaehee Kang', 'fff5eb', 'img/avatar/muhly.png'),
+    seven: new Member('707', 'fff1f1', 'img/avatar/707.png'),
+    jaehee: new Member('Jaehee Kang', 'fff5eb', 'img/avatar/jaehee.jpg'),
     yoosung: new Member('Yoosung★', 'eefff4', 'img/avatar/yoosung.jpg'),
-    hyun: new Member('ZEN', 'e5e5e5', 'img/avatar/muhly.png'),
-    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/muhly.png'),
-    jihyun: new Member('V', 'c9fbf8', 'img/avatar/muhly.png'),
-    rika: new Member('Rika', 'fff6d7', 'img/avatar/muhly.png'),
-    ray: new Member('Unknown', 'f3e6fa', 'img/avatar/muhly.png'),
+    hyun: new Member('ZEN', 'e5e5e5', 'img/avatar/zen.jpg'),
+    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.jpg'),
+    jihyun: new Member('V', 'c9fbf8', 'img/avatar/v.jpg'),
+    rika: new Member('Rika', 'fff6d7', 'img/avatar/question.jpg'),
+    ray: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
   };
 
   const wrapper = document.getElementById('wrapper');
@@ -73,19 +73,15 @@
   state.playing.activate();
 
   const members = [rfa.jaehee, rfa.jumin, rfa.yoosung];
-  const mc = new Member('Eve', 'ffffed', 'img/avatar/muhly.png', true);
+  const mc = new Member('Eve', 'ffffed', 'img/avatar/question.jpg', true);
   members.push(mc);
 
   document.getElementById('chat-name').innerText = members.map(m => m.name).sort().join(', ');
   document.getElementById('chat').setAttribute('class', 'bg3');
 
-  rfa.jumin.send('If we open a franchise all over the country');
-  rfa.jaehee.send('aelkfjeiejg');
-  rfa.jaehee.send('eflajgijbrk');
-  rfa.jaehee.send('$%^&');
-  mc.send('Think something\'s wrong with her phone.');
-  rfa.yoosung.send('Jaehee;; restart your phone.');
-  rfa.jaehee.send('I only wish to cleanse this chat room.');
-  state.waiting.activate();
+  rfa.seven.send('cats are just very small very furry humans');
+  mc.send('wtf');
+  Object.values(rfa).filter(p => p !== rfa.seven).forEach(p => p.send('wtf'));
+  state.playing.activate();
 
 })();

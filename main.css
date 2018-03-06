@@ -123,7 +123,6 @@ body {
 }
 
 #msg-list {
-    margin-top: 1.5vh;
     overflow-y: scroll;
 }
 
@@ -132,18 +131,26 @@ body {
 }
 
 #msg-list::-webkit-scrollbar-track {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 #msg-list::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.64);
+    border-radius: 5px;
 }
 
 .msg {
     margin: 0 3.2% 2.9vh;
     display: flex;
     flex-flow: row;
+}
+
+.msg:first-child {
+    margin-top: 1.5vh;
+}
+
+.msg:last-child {
+    margin-bottom: 1.5vh;
 }
 
 .msg-avatar {
