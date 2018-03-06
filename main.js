@@ -22,6 +22,7 @@
   };
 
   const msgList = document.getElementById('msg-list');
+  let scrollTask;
   function sendMsgRaw(author, body) {
     const msg = document.createElement("div");
     msg.setAttribute('class', 'msg');
@@ -36,6 +37,10 @@
   ${body}
 </div>`;
     msgList.appendChild(msg);
+    if (scrollTask) window.clearTimeout(scrollTask);
+    scrollTask = window.setTimeout(function() {
+      msg.scrollIntoView({behavior: 'smooth'});
+    }, 1);
     return msg;
   }
 
@@ -105,9 +110,23 @@
   updateName(members);
   bgs.night.activate();
 
-  rfa.seven.send('cats are just very small very furry humans');
-  mc.send('wtf');
-  Object.values(rfa).filter(p => p !== rfa.seven).forEach(p => p.send('wtf'));
-  state.playing.activate();
+  (async function() {
+    function sleep() {
+      return new Promise((res, rej) => window.setTimeout(res, 800));
+    }
+    rfa.seven.send('cats are just very small very furry humans');
+    await sleep();
+    mc.send('wtf');
+    await sleep();
+    for (const p of Object.values(rfa)) {
+      if (p !== rfa.seven) {
+        p.send('wtf');
+        await sleep();
+      }
+    }
+    state.playing.activate();
+
+    rfa.seven.send('why are you booing me? i\'m right');
+  })();
 
 })();
