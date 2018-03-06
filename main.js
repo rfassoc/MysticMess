@@ -62,10 +62,15 @@
       this.right = right;
     }
     
-    send(content) {
-      return sendMsg(this, `<div class="msg-balloon" style="background-color: #${this.colour}; border-top-color: #${this.colour};">
+    send(content, options = {}) {
+      const msg = sendMsg(this, `<div class="msg-balloon" style="background-color: #${this.colour}; border-top-color: #${this.colour};">
     <span class="msg-balloon-text">${content}</span>
 </div>`);
+      if (options.classes) {
+        for (const cssClass of options.classes) msg.classList.add(cssClass);
+      }
+      if (options.shake) doShake();
+      return msg;
     }
 
     sendJoin() {
@@ -132,6 +137,14 @@
   };
   state.playing.activate();
 
+  // shake animation stuff
+  let shakeTask;
+  function doShake() {
+    wrapper.classList.add('shake');
+    if (shakeTask) window.clearTimeout(shakeTask);
+    window.setTimeout(() => wrapper.classList.remove('shake'), 750);
+  }
+
   // chatroom event stuff
   class MessengerEvent {
     constructor(duration = 400) {
@@ -143,14 +156,15 @@
     }
   }
   class ChatEvent extends MessengerEvent {
-    constructor(author, text) {
+    constructor(author, text, options = {}) {
       super(Math.max(text.length * 72, 750));
       this.author = author;
       this.text = text;
+      this.options = options;
     }
 
     execute(ctx) {
-      this.author.send(this.text);
+      this.author.send(this.text, this.options);
     }
   }
   class JoinEvent extends MessengerEvent {
@@ -194,13 +208,13 @@
     new ChatEvent(rfa.seven, 'cats are just very small very furry humans'),
     new ChatEvent(rfa.yoosung, 'wtf'),
     new ChatEvent(mc, 'wtf'),
-    new ChatEvent(rfa.hyun, 'I really didn\'t need to hear that;;;'),
-    new ChatEvent(rfa.jaehee, 'Agreed.'),
+    new ChatEvent(rfa.hyun, 'I really didn\'t need to hear that;;;', {classes: ['curly']}),
+    new ChatEvent(rfa.jaehee, 'Agreed.', {classes: ['serif', 'bold']}),
     new LeaveEvent(rfa.jaehee),
     new LeaveEvent(rfa.hyun),
-    new ChatEvent(rfa.yoosung, 'hey, wait for me!!'),
+    new ChatEvent(rfa.yoosung, 'hey, wait for me!!', {shake: true, classes: ['big']}),
     new LeaveEvent(rfa.yoosung),
-    new ChatEvent(rfa.seven, 'why are you booing me? i\'m right'),
+    new ChatEvent(rfa.seven, 'why are you booing me? i\'m right', {classes: ['weird']}),
     new JoinEvent(rfa.ray),
     new ChatEvent(rfa.ray, 'I joined just to tell you that you\'re wrong'),
     new LeaveEvent(rfa.ray),
@@ -241,12 +255,13 @@
     document.getElementById('loader').style.display = 'none';
     prepareExecute(0);
   }
-  if (script.video) {
-    const iframe = document.getElementById('youtube-embed');
-    iframe.addEventListener('load', go);
-    iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
-  } else {
-    go();
-  }
+  // if (script.video) {
+  //   const iframe = document.getElementById('youtube-embed');
+  //   iframe.addEventListener('load', go);
+  //   iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
+  // } else {
+  //   go();
+  // }
+  go();
 
 })();

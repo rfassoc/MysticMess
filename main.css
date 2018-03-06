@@ -21,6 +21,7 @@
 body {
     background-color: #000;
     color: #000;
+    overflow: hidden;
     font-family: "Nanum Gothic", sans-serif;
     font-size: 0;
     font-weight: 600;
@@ -44,7 +45,6 @@ body {
 /**
  * Wrapper
  */
-
 @media all and (max-aspect-ratio: 3/4) {
     #wrapper {
         width: 100vw; height: 100vh;
@@ -65,10 +65,21 @@ body {
     top: 0;
 }
 
+#wrapper.shake {
+    animation: shake 0.4s infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes shake {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-9%, -9%); }
+    75% { transform: translate(9%, 9%); }
+    100% { transform: translate(0, 0); }
+}
+
 /**
  * Name bar
  */
-
 #name-bar {
     height: 9%;
     background: url("img/name-bar.png") center;
@@ -84,7 +95,6 @@ body {
 /**
  * Chat
  */
-
 #chat {
     height: 81%;
     position: relative;
@@ -219,6 +229,31 @@ body {
     font-size: 11pt;
 }
 
+.big .msg-balloon-text {
+    font-size: 24pt;
+}
+
+.msg.bold .msg-balloon-text {
+    font-weight: 900;
+}
+
+.curly .msg-balloon-text {
+    font-family: "Curly", cursive;
+    font-size: 13pt;
+    font-weight: normal;
+}
+
+.serif .msg-balloon-text {
+    font-family: "Nanum Myeongjo", serif;
+    font-weight: normal;
+}
+
+.weird .msg-balloon-text {
+    font-family: "BM KIRANGHAERANG", fantasy;
+    font-size: 13pt;
+    font-weight: normal;
+}
+
 .status {
     margin: 1.3vh 0;
     padding: 10px 0;
@@ -235,7 +270,6 @@ body {
 /**
  * Message bar
  */
-
 #msg-bar {
     height: 10%;
     background-color: #111;
