@@ -307,9 +307,12 @@ body {
     width: 100vw; height: 100vh;
     position: absolute;
     top: 0; left: 0;
+    background-color: #000;
+    text-align: center;
 }
 
 #loader-text {
-    font-size: 24pt;
+    color: #fff;
+    font-size: 12pt;
     font-weight: 900;
 }

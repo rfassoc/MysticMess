@@ -90,7 +90,10 @@
   // chat name stuff
   const chatName = document.getElementById('chat-name');
   function updateName(members) {
-    chatName.innerText = members.map(m => m.name).sort().join(', ');
+    const newName = [...members].map(m => m.name).sort().join(', ');
+    console.log(members, newName);
+    chatName.innerText = newName;
+    document.title = newName;
   }
 
   // chatroom state stuff
@@ -159,6 +162,7 @@
 
     execute(ctx) {
       this.author.sendJoin();
+      ctx.members.add(this.author);
       updateName(ctx.members);
     }
   }
@@ -170,6 +174,7 @@
 
     execute(ctx) {
       this.author.sendLeave();
+      ctx.members.delete(this.author);
       updateName(ctx.members);
     }
   }
@@ -206,7 +211,7 @@
 
   // script execution context
   const context = {
-    members: [...script.initialMembers],
+    members: new Set(script.initialMembers),
     activeEvent: null,
   };
 
@@ -233,6 +238,7 @@
     }
   }
   function go() {
+    updateName(context.members);
     document.getElementById('loader').style.display = 'none';
     prepareExecute(0);
   }
