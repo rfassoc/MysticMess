@@ -86,7 +86,7 @@
     jaehee: new Member('Jaehee Kang', 'fff5eb', 'img/avatar/jaehee.jpg'),
     yoosung: new Member('Yoosung★', 'eefff4', 'img/avatar/yoosung.jpg'),
     hyun: new Member('ZEN', 'e5e5e5', 'img/avatar/zen.jpg'),
-    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.jpg'),
+    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.png'),
     jihyun: new Member('V', 'c9fbf8', 'img/avatar/v.jpg'),
     rika: new Member('Rika', 'fff6d7', 'img/avatar/question.jpg'),
     ray: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
