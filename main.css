@@ -148,17 +148,9 @@ body {
 }
 
 .msg {
-    margin: 0 3.2% 2.9vh;
+    margin: 2.9vh 3.2%;
     display: flex;
     flex-flow: row;
-}
-
-.msg:first-child {
-    margin-top: 1.5vh;
-}
-
-.msg:last-child {
-    margin-bottom: 1.5vh;
 }
 
 .msg-avatar {
@@ -225,6 +217,19 @@ body {
 
 .msg-balloon-text {
     font-size: 11pt;
+}
+
+.status {
+    margin: 1.3vh 0;
+    padding: 10px 0;
+    background-color: rgba(0, 0, 0, 0.64);
+}
+
+.status-text {
+    margin: 0 auto;
+    color: #fff;
+    font-size: 9pt;
+    font-weight: 400;
 }
 
 /**
