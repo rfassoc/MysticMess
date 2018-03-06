@@ -91,7 +91,6 @@
   const chatName = document.getElementById('chat-name');
   function updateName(members) {
     const newName = [...members].map(m => m.name).sort().join(', ');
-    console.log(members, newName);
     chatName.innerText = newName;
     document.title = newName;
   }
