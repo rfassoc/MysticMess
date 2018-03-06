@@ -1,5 +1,26 @@
 (function() {
 
+  const chat = document.getElementById('chat');
+  class Background {
+    constructor(cssClass, dark) {
+      this.cssClass = cssClass;
+      this.dark = dark;
+    }
+
+    activate() {
+      chat.classList.add(this.cssClass);
+      if (this.dark) chat.classList.add('dark');
+    }
+  }
+  const bgs = {
+    day: new Background('bg1', false),
+    night: new Background('bg2', true),
+    dawn: new Background('bg3', false),
+    noon: new Background('bg4', false),
+    dusk: new Background('bg5', true),
+    code: new Background('bg6', true),
+  };
+
   const msgList = document.getElementById('msg-list');
   function sendMsgRaw(author, body) {
     const msg = document.createElement("div");
@@ -43,6 +64,11 @@
     ray: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
   };
 
+  const chatName = document.getElementById('chat-name');
+  function updateName(members) {
+    chatName.innerText = members.map(m => m.name).sort().join(', ');
+  }
+
   const wrapper = document.getElementById('wrapper');
   const msgBtnIcon = document.getElementById('msg-button-icon');
   const msgBtnText = document.getElementById('msg-button-text');
@@ -76,8 +102,8 @@
   const mc = new Member('Eve', 'ffffed', 'img/avatar/question.jpg', true);
   members.push(mc);
 
-  document.getElementById('chat-name').innerText = members.map(m => m.name).sort().join(', ');
-  document.getElementById('chat').setAttribute('class', 'bg3');
+  updateName(members);
+  bgs.night.activate();
 
   rfa.seven.send('cats are just very small very furry humans');
   mc.send('wtf');

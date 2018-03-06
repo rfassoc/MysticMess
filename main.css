@@ -73,7 +73,7 @@ body {
     height: 9%;
     background: url("img/name-bar.png") center;
     background-size: cover;
-    color: #FFF;
+    color: #fff;
     text-align: center;
 }
 
@@ -139,6 +139,14 @@ body {
     border-radius: 5px;
 }
 
+.dark #msg-list::-webkit-scrollbar-track {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #msg-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.48);
+}
+
 .msg {
     margin: 0 3.2% 2.9vh;
     display: flex;
@@ -184,6 +192,10 @@ body {
 .msg-author-text {
     font-size: 11pt;
     font-weight: 900;
+}
+
+.dark .msg-author-text {
+    color: #fff;
 }
 
 .msg-balloon {
