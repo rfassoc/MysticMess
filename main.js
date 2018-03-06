@@ -133,9 +133,17 @@
     playing: new ChatroomState('Pause', 'img/icon/pause.png'),
     paused: new ChatroomState('Play', 'img/icon/play.png', false),
     waiting: new ChatroomState('Answer', 'img/icon/reply.png', false, true),
-    done: new ChatroomState('End', 'img/icon/pause.png'),
+    done: new ChatroomState('End', 'img/icon/save.png', false),
   };
+  state.playing.execute = () => state.paused.activate();
+  state.paused.execute = () => state.playing.activate();
+  state.waiting.execute = () => {}; // TODO Show answer prompt
+  state.done.execute = () => {}; // TODO Figure out what to actually do with this
   state.playing.activate();
+
+  // message bar button behaviour
+  const button = document.getElementById('msg-button');
+  button.onclick = () => chatState.execute();
 
   // shake animation stuff
   let shakeTask;
