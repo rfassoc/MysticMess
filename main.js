@@ -57,6 +57,7 @@
   class Member {
     constructor(name, colour, avatar, right = false) {
       this.name = name;
+      this.lcname = name.toLowerCase();
       this.colour = colour;
       this.avatar = avatar;
       this.right = right;
@@ -91,6 +92,7 @@
     rika: new Member('Rika', 'fff6d7', 'img/avatar/question.jpg'),
     ray: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
   };
+  rfa.findMember = name => rfa[name] || Object.values(rfa).find(m => m.lcname === name);
 
   // chat name stuff
   const chatName = document.getElementById('chat-name');
@@ -243,84 +245,233 @@
     }
   }
 
-  // TODO load and parse chatroom script
-  const script = {
-    initialMembers: [rfa.yoosung, rfa.seven, rfa.jaehee, rfa.hyun],
-    mc: {name: 'Eve'},
-    background: 'night',
-    video: 'COlXAgQ6Cu0',
-  };
-  const mc = new Member(script.mc.name || 'MC',
-    script.mc.colour || 'ffffed',
-    script.mc.avatar || 'img/avatar/mc.jpg',
-    true);
-  script.initialMembers.push(mc);
-  script.events = [
-    new ChatEvent(rfa.seven, 'cats are just very small very furry humans'),
-    new ChatEvent(rfa.yoosung, 'wtf'),
-    new BranchEvent({
-      'i think he\'s onto something..': [
-        new ChatEvent(rfa.yoosung, 'MC wtf'),
-      ],
-      'wtf': [
-        new ChatEvent(rfa.yoosung, 'ikr'),
-      ],
-    }),
-    new ChatEvent(rfa.hyun, 'I really didn\'t need to hear that;;;', {classes: ['curly']}),
-    new ChatEvent(rfa.jaehee, 'Agreed.', {classes: ['serif', 'bold']}),
-    new LeaveEvent(rfa.jaehee),
-    new LeaveEvent(rfa.hyun),
-    new ChatEvent(rfa.yoosung, 'hey, wait for me!!', {shake: true, classes: ['big']}),
-    new LeaveEvent(rfa.yoosung),
-    new ChatEvent(rfa.seven, 'why are you booing me? i\'m right', {classes: ['weird']}),
-    new JoinEvent(rfa.ray),
-    new ChatEvent(rfa.ray, 'I joined just to tell you that you\'re wrong'),
-    new LeaveEvent(rfa.ray),
-    new ChatEvent(rfa.seven, ':('),
-    new LeaveEvent(rfa.seven),
-  ];
+  // parse url query
+  const query = {};
+  for (const entry of document.location.search.substring(1).split('&')) {
+    const delimIndex = entry.indexOf('=');
+    if (~delimIndex) query[entry.substring(0, delimIndex)] = entry.substring(delimIndex + 1);
+  }
 
-  // script execution context
-  const context = {
-    mc,
-    members: new Set(script.initialMembers),
-    activeEvent: null,
-    queue: [...script.events],
-  };
-
-  // execute script
-  (bgs[script.background] || bgs.day).activate();
-  function prepareExecute(notFirst = true) {
-    if (!context.queue.length) {
-      state.done.activate();
-      return;
-    }
-    context.activeEvent = context.queue.shift();
-    function execute(event) {
-      if (!chatState.playable) {
-        playableCallbacks.add(() => execute(event));
+  function executeScript(script) {
+    const mc = new Member(script.mc.name || 'MC',
+      script.mc.colour || 'ffffed',
+      script.mc.avatar || 'img/avatar/mc.jpg',
+      true);
+    script.initialMembers.push(mc);
+    const context = {
+      mc,
+      members: new Set(script.initialMembers),
+      activeEvent: null,
+      queue: [...script.events],
+    };
+    (bgs[script.background] || bgs.day).activate();
+    function prepareExecute(notFirst = true) {
+      if (!context.queue.length) {
+        state.done.activate();
+        return;
+      }
+      context.activeEvent = context.queue.shift();
+      function execute(event) {
+        if (!chatState.playable) {
+          playableCallbacks.add(() => execute(event));
+        } else {
+          event.execute(context, prepareExecute);
+        }
+      }
+      if (notFirst && context.activeEvent.duration > 0) {
+        window.setTimeout(() => execute(context.activeEvent), context.activeEvent.duration);
       } else {
-        event.execute(context, prepareExecute);
+        execute(context.activeEvent);
       }
     }
-    if (notFirst && context.activeEvent.duration > 0) {
-      window.setTimeout(() => execute(context.activeEvent), context.activeEvent.duration);
+    function go() {
+      updateName(context.members);
+      document.getElementById('loader').style.display = 'none';
+      prepareExecute(false);
+    }
+    if (script.video) {
+      const iframe = document.getElementById('youtube-embed');
+      iframe.addEventListener('load', go);
+      iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
     } else {
-      execute(context.activeEvent);
+      go();
     }
   }
-  function go() {
-    updateName(context.members);
-    document.getElementById('loader').style.display = 'none';
-    prepareExecute(false);
+
+  // determine script location and type then load script
+  const loaderText = document.getElementById('loader-text');
+  if (!query.type) {
+    loaderText.innerText = 'No script type specified';
+  } else if (!query.url) {
+    loaderText.innerText = 'No script URL specified';
+  } else {
+    let processUrl = (url => url), parse;
+    switch (query.type.toLowerCase()) {
+      // tumblr parser
+      case 'tumblr':
+        processUrl = url => {
+          const u = new URL(url);
+          return `https://crossorigin.me/https://${u.host}/api/read/json?id=${u.pathname.split('/').find(p => /^\d+$/.test(p))}&filter=text`;
+        };
+        parse = data => {
+          const post = JSON.parse(data.trim().substring(22, data.length - 2)).posts[0];
+          if (post.type !== 'conversation') throw new Error('Only chat posts can be parsed');
+          const script = {mc: {}, events: []};
+          const characters = new Set();
+          let seenMc = false;
+          for (let {name, phrase} of post.conversation) {
+            name = name.toLowerCase();
+            const author = rfa.findMember(name);
+            if (!author) {
+              if (name !== 'me' && name !== 'mc') {
+                if (name !== script.mc.name && seenMc) throw new Error(`At least one unknown character: ${name}`);
+                script.mc.name = name;
+              }
+              seenMc = true;
+            } else {
+              characters.add(author);
+            }
+            script.events.push(new ChatEvent(author, phrase));
+          }
+          script.initialMembers = [...characters];
+          return script;
+        };
+        break;
+
+      // standard script file parser
+      case 'direct':
+        parse = data => {
+          const script = {mc: {}, events: []};
+          data = data.split('\n');
+          const sectionDelim = data.indexOf('---');
+          if (sectionDelim === -1) throw new Error('No script section');
+          for (let i = 0; i < sectionDelim; i++) {
+            const delim = data[i].indexOf(':');
+            if (delim === -1) throw new Error('Meta line without delimiter');
+            const value = data[i].substring(delim + 1).trim();
+            switch (data[i].substring(0, delim).trim()) {
+              case 'mc.name':
+                script.mc.name = value;
+                break;
+              case 'mc.colour':
+                script.mc.colour = value;
+                break;
+              case 'mc.avatar':
+                script.mc.avatar = value;
+                break;
+              case 'video':
+                script.video = value;
+                break;
+              case 'members':
+                script.initialMembers = value.split(',').map(n => rfa.findMember(n.trim().toLowerCase()));
+                break;
+              case 'background':
+                script.background = value;
+                break;
+            }
+          }
+          data = data.slice(sectionDelim + 1);
+          let n = 0;
+          (function parseAtLevel(level, events) {
+            const prefix = ' '.repeat(level);
+            let branches = null;
+            while (true) {
+              let line = data[n];
+              if (!line || !line.startsWith(prefix) || line[level] === ' ') break;
+              line = line.trim();
+              n++;
+              if (branches) {
+                if (line === '$') {
+                  events.push(new BranchEvent(branches));
+                  branches = null;
+                } else {
+                  const branch = [];
+                  parseAtLevel(level + 1, branch);
+                  branches[line] = branch;
+                }
+              } else if (line === '^') {
+                branches = {};
+              } else if (line.startsWith('+')) {
+                const name = line.substring(1);
+                const person = rfa.findMember(name.toLowerCase());
+                if (!person) throw new Error(`Invalid character joining: ${name}`);
+                events.push(new JoinEvent(person));
+              } else if (line.startsWith('-')) {
+                const name = line.substring(1);
+                const person = rfa.findMember(name.toLowerCase());
+                if (!person) throw new Error(`Invalid character leaving: ${name}`);
+                events.push(new LeaveEvent(person));
+              } else {
+                let delim = line.indexOf(':');
+                const text = line.substring(delim + 1).trim();
+                let author = line.substring(0, delim).trim();
+                const options = {classes: []};
+                delim = author.indexOf('|');
+                if (~delim) {
+                  for (let i = delim + 1; i < author.length; i++) {
+                    switch (author[i]) {
+                      case 'c':
+                        options.classes.push('curly');
+                        break;
+                      case 's':
+                        options.classes.push('serif');
+                        break;
+                      case 'b':
+                        options.classes.push('bold');
+                        break;
+                      case 'h':
+                        options.classes.push('big');
+                        break;
+                      case '!':
+                        options.shake = true;
+                        break;
+                      case 'w':
+                        options.classes.push('weird');
+                        break;
+                    }
+                  }
+                  author = author.substring(0, delim);
+                }
+                author = rfa.findMember(author.toLowerCase());
+                events.push(new ChatEvent(author, text, options));
+              }
+            }
+          })(0, script.events);
+          return script;
+        };
+        break;
+
+      // json script parser
+      case 'json':
+        parse = data => {
+          throw new Error('This format isn\'t implemented yet');
+        };
+        break;
+    }
+    const req = new XMLHttpRequest();
+    try {
+      req.open('GET', processUrl(query.url), true);
+    } catch (e) {
+      console.error(e);
+      loaderText.innerText = e.message;
+      return;
+    }
+    req.onload = () => {
+      if (req.status >= 400) {
+        loaderText.innerText = `${req.status}: ${req.responseText}`;
+      } else {
+        try {
+          executeScript(parse(req.responseText));
+        } catch (e) {
+          console.error(e);
+          loaderText.innerText = e.message;
+        }
+      }
+    };
+    req.onerror = () => {
+      loaderText.innerText = 'Failed to load script';
+    };
+    req.send();
   }
-  // if (script.video) {
-  //   const iframe = document.getElementById('youtube-embed');
-  //   iframe.addEventListener('load', go);
-  //   iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
-  // } else {
-  //   go();
-  // }
-  go();
 
 })();
