@@ -42,6 +42,26 @@ body {
     vertical-align: middle;
 }
 
+.button {
+    padding: 2px;
+    position: relative;
+    display: inline-block;
+    background-image: linear-gradient(0deg, #fbac01, #ecc967);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.button-body {
+    width: 100%; height: 100%;
+    background-image: linear-gradient(0deg, #dfdfde, #fefefd);
+    box-shadow: inset 0 0 2px 1px #afaca5;
+    border-radius: 2px;
+}
+
+.button-body:hover {
+    background-image: linear-gradient(0deg, #fefefd, #dfdfde);
+}
+
 /**
  * Wrapper
  */
@@ -72,8 +92,8 @@ body {
 
 @keyframes shake {
     0%   { transform: translate(0, 0); }
-    25%  { transform: translate(-9%, -9%); }
-    75% { transform: translate(9%, 9%); }
+    25%  { transform: translate(-7%, -7%); }
+    75% { transform: translate(7%, 7%); }
     100% { transform: translate(0, 0); }
 }
 
@@ -109,7 +129,7 @@ body {
 .bg5 { background-image: url("img/bg/5.png"); }
 .bg6 { background-image: url("img/bg/6.png"); }
 
-#msg-list, #visor, #msg-button-visor, #msg-button-body-content {
+#msg-list, #visor, #msg-button-visor, #msg-button-body-content, #reply-container, #reply-visor {
     width: 100%; height: 100%;
     position: absolute;
     top: 0; left: 0;
@@ -278,19 +298,6 @@ body {
 
 #msg-button {
     width: 59%; height: 48%;
-    padding: 2px;
-    position: relative;
-    display: inline-block;
-    background-image: linear-gradient(0deg, #fbac01, #ecc967);
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-#msg-button-body {
-    width: 100%; height: 100%;
-    background-image: linear-gradient(0deg, #dfdfde, #fefefd);
-    box-shadow: inset 0 0 2px 1px #afaca5;
-    border-radius: 2px;
 }
 
 #msg-button-visor {
@@ -298,7 +305,7 @@ body {
     opacity: 0;
 }
 
-.answer > #msg-bar > #msg-button > #msg-button-body > #msg-button-visor {
+.answer #msg-button-visor {
     animation: yellow-blinky 2s infinite;
     animation-timing-function: linear;
 }
@@ -309,10 +316,6 @@ body {
     100% { opacity: 0.64; }
 }
 
-#msg-button-body:hover {
-    background-image: linear-gradient(0deg, #fefefd, #dfdfde);
-}
-
 #msg-button-icon {
     width: 14pt;
     margin-right: 8px;
@@ -320,6 +323,42 @@ body {
 }
 
 #msg-button-text {
+    font-size: 11pt;
+}
+
+/*
+ * Reply interface
+ */
+#reply-container {
+    display: none;
+}
+
+#reply-container.visible {
+    display: block;
+}
+
+#reply-visor {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#reply-list {
+    margin: 0 auto;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.reply {
+    width: 100%;
+    margin: 4.167% 0;
+}
+
+.reply-body {
+    padding: 3.5vh;
+    text-align: center;
+}
+
+.reply-text {
     font-size: 11pt;
 }
 

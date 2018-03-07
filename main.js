@@ -104,7 +104,7 @@
   const wrapper = document.getElementById('wrapper');
   const msgBtnIcon = document.getElementById('msg-button-icon');
   const msgBtnText = document.getElementById('msg-button-text');
-  let chatState;
+  let chatState, stateCtx;
   const playableCallbacks = new Set();
   class ChatroomState {
     constructor(btnText, icon, playable = true, reply = false) {
@@ -114,8 +114,9 @@
       this.reply = reply;
     }
 
-    activate() {
+    activate(ctx = null) {
       chatState = this;
+      stateCtx = ctx;
       msgBtnText.innerText = this.btnText;
       msgBtnIcon.setAttribute('src', this.icon);
       if (this.reply) {
@@ -137,9 +138,38 @@
   };
   state.playing.execute = () => state.paused.activate();
   state.paused.execute = () => state.playing.activate();
-  state.waiting.execute = () => {}; // TODO Show answer prompt
+  state.waiting.execute = () => showReplies(stateCtx);
   state.done.execute = () => {}; // TODO Figure out what to actually do with this
   state.playing.activate();
+
+  // reply stuff
+  const replyCont = document.getElementById('reply-container');
+  const replyList = document.getElementById('reply-list');
+  function hideReplies() {
+    replyCont.classList.remove('visible');
+  }
+  function showReplies(ctx) {
+    let child;
+    while (child = replyList.lastChild) replyList.removeChild(child);
+    for (const [reply, events] of Object.entries(ctx.branches)) {
+      const replyBox = document.createElement('div');
+      replyBox.setAttribute('class', 'reply button');
+      replyBox.innerHTML = `<div class="reply-body button-body">
+    <span class="reply-text">${reply}</span>
+</div>`;
+      replyBox.onclick = () => {
+        ctx.upstream.mc.send(reply);
+        ctx.upstream.queue.unshift(...events);
+        hideReplies();
+        state.playing.activate();
+        ctx.next();
+      };
+
+      replyList.appendChild(replyBox);
+    }
+    window.setTimeout(() => replyCont.classList.add('visible'));
+  }
+  document.getElementById('reply-visor').onclick = hideReplies;
 
   // message bar button behaviour
   const button = document.getElementById('msg-button');
@@ -171,8 +201,9 @@
       this.options = options;
     }
 
-    execute(ctx) {
-      this.author.send(this.text, this.options);
+    execute(ctx, next) {
+      this.author.send(this.text.replace(/\bMC\b/g, ctx.mc.name), this.options);
+      next();
     }
   }
   class JoinEvent extends MessengerEvent {
@@ -181,10 +212,11 @@
       this.author = author;
     }
 
-    execute(ctx) {
+    execute(ctx, next) {
       this.author.sendJoin();
       ctx.members.add(this.author);
       updateName(ctx.members);
+      next();
     }
   }
   class LeaveEvent extends MessengerEvent {
@@ -193,17 +225,28 @@
       this.author = author;
     }
 
-    execute(ctx) {
+    execute(ctx, next) {
       this.author.sendLeave();
       ctx.members.delete(this.author);
       updateName(ctx.members);
+      next();
+    }
+  }
+  class BranchEvent extends MessengerEvent {
+    constructor(branches) {
+      super(0);
+      this.branches = branches;
+    }
+
+    execute(ctx, next) {
+      state.waiting.activate({upstream: ctx, branches: this.branches, next});
     }
   }
 
   // TODO load and parse chatroom script
   const script = {
     initialMembers: [rfa.yoosung, rfa.seven, rfa.jaehee, rfa.hyun],
-    mc: {},
+    mc: {name: 'Eve'},
     background: 'night',
     video: 'COlXAgQ6Cu0',
   };
@@ -215,7 +258,14 @@
   script.events = [
     new ChatEvent(rfa.seven, 'cats are just very small very furry humans'),
     new ChatEvent(rfa.yoosung, 'wtf'),
-    new ChatEvent(mc, 'wtf'),
+    new BranchEvent({
+      'i think he\'s onto something..': [
+        new ChatEvent(rfa.yoosung, 'MC wtf'),
+      ],
+      'wtf': [
+        new ChatEvent(rfa.yoosung, 'ikr'),
+      ],
+    }),
     new ChatEvent(rfa.hyun, 'I really didn\'t need to hear that;;;', {classes: ['curly']}),
     new ChatEvent(rfa.jaehee, 'Agreed.', {classes: ['serif', 'bold']}),
     new LeaveEvent(rfa.jaehee),
@@ -232,27 +282,28 @@
 
   // script execution context
   const context = {
+    mc,
     members: new Set(script.initialMembers),
     activeEvent: null,
+    queue: [...script.events],
   };
 
   // execute script
   (bgs[script.background] || bgs.day).activate();
-  function prepareExecute(n) {
-    if (n >= script.events.length) {
+  function prepareExecute(notFirst = true) {
+    if (!context.queue.length) {
       state.done.activate();
       return;
     }
-    context.activeEvent = script.events[n];
+    context.activeEvent = context.queue.shift();
     function execute(event) {
       if (!chatState.playable) {
         playableCallbacks.add(() => execute(event));
       } else {
-        event.execute(context);
-        prepareExecute(n + 1);
+        event.execute(context, prepareExecute);
       }
     }
-    if (n > 0 && context.activeEvent.duration > 0) {
+    if (notFirst && context.activeEvent.duration > 0) {
       window.setTimeout(() => execute(context.activeEvent), context.activeEvent.duration);
     } else {
       execute(context.activeEvent);
@@ -261,7 +312,7 @@
   function go() {
     updateName(context.members);
     document.getElementById('loader').style.display = 'none';
-    prepareExecute(0);
+    prepareExecute(false);
   }
   // if (script.video) {
   //   const iframe = document.getElementById('youtube-embed');
