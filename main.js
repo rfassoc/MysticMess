@@ -447,6 +447,10 @@
           throw new Error('This format isn\'t implemented yet');
         };
         break;
+
+      // no parser
+      default:
+        throw new Error('Invalid parser type');
     }
     const req = new XMLHttpRequest();
     try {
