@@ -298,7 +298,6 @@
   }
 
   function executeScript(script) {
-    console.log(script.events);
     const mc = new Member(script.mc.name || 'MC',
       script.mc.colour || 'ffffed',
       script.mc.avatar || 'img/avatar/mc.jpg',
@@ -423,9 +422,7 @@
             let branches = null;
             while (true) {
               let line = data[n];
-              console.log(level, line);
               if (!line || !line.startsWith(prefix)) break;
-              console.log(level, 'continuing parsing');
               line = line.trim();
               n++;
               if (branches) {
