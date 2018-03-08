@@ -278,8 +278,12 @@ body {
     width: 40%;
 }
 
-.emote {
+.emote, .chat-image {
     width: 100%;
+}
+
+.msg-chat-image {
+    width: 75%;
 }
 
 .status {

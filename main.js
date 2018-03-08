@@ -87,6 +87,12 @@
 </div>`);
     }
 
+    sendImage(url) {
+      return sendMsg(this, `<div class="msg-chat-image">
+    <img class="chat-image" src="${url}"/>
+</div>`);
+    }
+
     sendJoin() {
       return sendStatus(`${this.name} has entered the chatroom.`);
     }
@@ -261,6 +267,18 @@
       next();
     }
   }
+  class ImageEvent extends MessengerEvent {
+    constructor(author, url) {
+      super(1000);
+      this.author = author;
+      this.url = url;
+    }
+
+    execute(ctx, next) {
+      this.author.sendImage(this.url);
+      next();
+    }
+  }
   class BranchEvent extends MessengerEvent {
     constructor(branches) {
       super(0);
@@ -280,6 +298,7 @@
   }
 
   function executeScript(script) {
+    console.log(script.events);
     const mc = new Member(script.mc.name || 'MC',
       script.mc.colour || 'ffffed',
       script.mc.avatar || 'img/avatar/mc.jpg',
@@ -369,8 +388,8 @@
       case 'direct':
         parse = data => {
           const script = {mc: {}, events: []};
-          data = data.split('\n').map(l => l.trim());
-          const sectionDelim = data.indexOf('---');
+          data = data.split('\n');
+          const sectionDelim = data.findIndex(l => l.trim() === '---');
           if (sectionDelim === -1) throw new Error('No script section');
           for (let i = 0; i < sectionDelim; i++) {
             const delim = data[i].indexOf(':');
@@ -404,7 +423,9 @@
             let branches = null;
             while (true) {
               let line = data[n];
-              if (!line || !line.startsWith(prefix) || line[level] === ' ') break;
+              console.log(level, line);
+              if (!line || !line.startsWith(prefix)) break;
+              console.log(level, 'continuing parsing');
               line = line.trim();
               n++;
               if (branches) {
@@ -429,15 +450,12 @@
                 if (!person) throw new Error(`Invalid character leaving: ${name}`);
                 events.push(new LeaveEvent(person));
               } else {
-                let delim = line.indexOf(':');
-                if (~delim) { // it's a chat message
-                  const text = line.substring(delim + 1).trim();
-                  let author = line.substring(0, delim).trim();
+                let parsed = /^(\w+)(?:\|([^:]+))?:(.+)$/.exec(line);
+                if (parsed) { // it's a chat message
                   const options = {classes: []};
-                  delim = author.indexOf('|');
-                  if (~delim) {
-                    for (let i = delim + 1; i < author.length; i++) {
-                      switch (author[i]) {
+                  if (parsed[2]) {
+                    for (let char of parsed[2]) {
+                      switch (char) {
                         case 'c':
                           options.classes.push('curly');
                           break;
@@ -458,19 +476,24 @@
                           break;
                       }
                     }
-                    author = author.substring(0, delim);
                   }
-                  author = rfa.findMember(author.toLowerCase());
+                  const author = rfa.findMember(parsed[1].toLowerCase());
+                  const text = parsed[3].trim();
                   events.push(new ChatEvent(author, text, options));
-                } else if (~(delim = line.indexOf('!'))) { // it's an emoji
-                  const name = line.substring(0, delim).toLowerCase();
+                } else if (parsed = /^(\w+)!(\w+)$/.exec(line)) { // it's an emoji
+                  const name = parsed[1].toLowerCase();
                   const author = rfa.findMember(name);
                   if (!author) throw new Error(`Invalid character emoting: ${name}`);
-                  const emote = line.substring(delim + 1);
+                  const emote = parsed[2];
                   if (!availableEmotes.hasOwnProperty(author.key) || !availableEmotes[author.key].includes(emote)) {
                     throw new Error(`Invalid emote: ${author.name} ${emote}`);
                   }
                   events.push(new EmoteEvent(author, emote));
+                } else if (parsed = /^(\w+)&(.+)$/.exec(line)) { // it's an image
+                  const name = parsed[1].toLowerCase();
+                  const author = rfa.findMember(name);
+                  if (!author) throw new Error(`Invalid character sending image: ${name}`);
+                  events.push(new ImageEvent(author, parsed[2]));
                 } else { // no clue what it is
                   throw new Error(`Unparsable line: ${line}`);
                 }
