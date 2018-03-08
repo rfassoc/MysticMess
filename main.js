@@ -54,6 +54,13 @@
   }
 
   // chatroom member stuff
+  const availableEmotes = {
+    seven: ['confuse', 'frustrate', 'happy', 'love', 'sad', 'star', 'success', 'surprise', 'wtf'],
+    jaehee: ['angry', 'confuse', 'cry', 'happy', 'sad', 'star', 'success', 'surprise', 'wtf'],
+    yoosung: ['angry', 'confuse', 'cry', 'happy', 'love', 'sad', 'star', 'success', 'surprise', 'wtf'],
+    hyun: ['angry', 'confuse', 'cry', 'happy', 'love', 'sad', 'star', 'surprise', 'wtf'],
+    jumin: ['angry', 'cry', 'happy', 'wtf'],
+  };
   class Member {
     constructor(name, colour, avatar, right = false) {
       this.name = name;
@@ -74,6 +81,12 @@
       return msg;
     }
 
+    sendEmote(name) {
+      return sendMsg(this, `<div class="msg-emote">
+    <img class="emote" src="img/emote/${this.key}/${name}.gif"/>
+</div>`);
+    }
+
     sendJoin() {
       return sendStatus(`${this.name} has entered the chatroom.`);
     }
@@ -90,8 +103,10 @@
     jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.png'),
     jihyun: new Member('V', 'c9fbf8', 'img/avatar/v.jpg'),
     rika: new Member('Rika', 'fff6d7', 'img/avatar/question.jpg'),
-    ray: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
+    unknown: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
+    saeran: new Member('Ray', 'f3e6fa', 'img/avatar/question.jpg'),
   };
+  for (const key of Object.keys(rfa)) rfa[key].key = key;
   rfa.findMember = name => rfa[name] || Object.values(rfa).find(m => m.lcname === name);
 
   // chat name stuff
@@ -234,6 +249,18 @@
       next();
     }
   }
+  class EmoteEvent extends MessengerEvent {
+    constructor(author, name) {
+      super(500);
+      this.author = author;
+      this.name = name;
+    }
+
+    execute(ctx, next) {
+      this.author.sendEmote(this.name);
+      next();
+    }
+  }
   class BranchEvent extends MessengerEvent {
     constructor(branches) {
       super(0);
@@ -342,7 +369,7 @@
       case 'direct':
         parse = data => {
           const script = {mc: {}, events: []};
-          data = data.split('\n');
+          data = data.split('\n').map(l => l.trim());
           const sectionDelim = data.indexOf('---');
           if (sectionDelim === -1) throw new Error('No script section');
           for (let i = 0; i < sectionDelim; i++) {
@@ -403,37 +430,50 @@
                 events.push(new LeaveEvent(person));
               } else {
                 let delim = line.indexOf(':');
-                const text = line.substring(delim + 1).trim();
-                let author = line.substring(0, delim).trim();
-                const options = {classes: []};
-                delim = author.indexOf('|');
-                if (~delim) {
-                  for (let i = delim + 1; i < author.length; i++) {
-                    switch (author[i]) {
-                      case 'c':
-                        options.classes.push('curly');
-                        break;
-                      case 's':
-                        options.classes.push('serif');
-                        break;
-                      case 'b':
-                        options.classes.push('bold');
-                        break;
-                      case 'h':
-                        options.classes.push('big');
-                        break;
-                      case '!':
-                        options.shake = true;
-                        break;
-                      case 'w':
-                        options.classes.push('weird');
-                        break;
+                if (~delim) { // it's a chat message
+                  const text = line.substring(delim + 1).trim();
+                  let author = line.substring(0, delim).trim();
+                  const options = {classes: []};
+                  delim = author.indexOf('|');
+                  if (~delim) {
+                    for (let i = delim + 1; i < author.length; i++) {
+                      switch (author[i]) {
+                        case 'c':
+                          options.classes.push('curly');
+                          break;
+                        case 's':
+                          options.classes.push('serif');
+                          break;
+                        case 'b':
+                          options.classes.push('bold');
+                          break;
+                        case 'h':
+                          options.classes.push('big');
+                          break;
+                        case '!':
+                          options.shake = true;
+                          break;
+                        case 'w':
+                          options.classes.push('weird');
+                          break;
+                      }
                     }
+                    author = author.substring(0, delim);
                   }
-                  author = author.substring(0, delim);
+                  author = rfa.findMember(author.toLowerCase());
+                  events.push(new ChatEvent(author, text, options));
+                } else if (~(delim = line.indexOf('!'))) { // it's an emoji
+                  const name = line.substring(0, delim).toLowerCase();
+                  const author = rfa.findMember(name);
+                  if (!author) throw new Error(`Invalid character emoting: ${name}`);
+                  const emote = line.substring(delim + 1);
+                  if (!availableEmotes.hasOwnProperty(author.key) || !availableEmotes[author.key].includes(emote)) {
+                    throw new Error(`Invalid emote: ${author.name} ${emote}`);
+                  }
+                  events.push(new EmoteEvent(author, emote));
+                } else { // no clue what it is
+                  throw new Error(`Unparsable line: ${line}`);
                 }
-                author = rfa.findMember(author.toLowerCase());
-                events.push(new ChatEvent(author, text, options));
               }
             }
           })(0, script.events);

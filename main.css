@@ -274,6 +274,14 @@ body {
     font-weight: normal;
 }
 
+.msg-emote {
+    width: 40%;
+}
+
+.emote {
+    width: 100%;
+}
+
 .status {
     margin: 1.3vh 0;
     padding: 10px 0;
