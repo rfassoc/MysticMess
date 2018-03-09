@@ -333,6 +333,7 @@
       queue: [...script.events],
       hearts: {},
     };
+    if (query.cb) context.callbackUrl = query.cb;
     for (const member of Object.values(rfa)) {
       if (member.heart) context.hearts[member.key] = 0;
     }
@@ -340,7 +341,11 @@
     function prepareExecute(notFirst = true) {
       if (!context.queue.length) {
         state.done.activate();
-        console.log(context.hearts); // TODO do something meaningful with this?
+        if (context.callbackUrl) {
+          const req = new XMLHttpRequest();
+          req.open('POST', context.callbackUrl, true);
+          req.send(context.hearts);
+        }
         return;
       }
       context.activeEvent = context.queue.shift();
