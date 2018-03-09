@@ -254,6 +254,10 @@ body {
     font-size: 24pt;
 }
 
+.underline .msg-balloon-text {
+    border-bottom: 1px solid #000;
+}
+
 .msg.bold .msg-balloon-text {
     font-weight: 900;
 }

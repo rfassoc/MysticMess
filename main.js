@@ -499,6 +499,9 @@
                         case 'w':
                           options.classes.push('weird');
                           break;
+                        case 'u':
+                          options.classes.push('underline');
+                          break;
                       }
                     }
                   }
