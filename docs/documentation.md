@@ -34,7 +34,25 @@ For example, this is how you might load [this script file](https://gist.githubus
 To be implemented...!
 
 ## Can I Get Heart Data as a Callback?
-Uhhhhhhhhhhhhh....... not yet.
+If you supply a callback URL as the query parameter `cb`, Mystic Mess will make a POST request to the specified URL upon completion of the chatroom. In practice, your Mystic Mess URL might look like this:
+```
+/?type=direct&url=https://exmaple.com/script.txt&cb=https://example.com/callback
+```
+The payload sent with the POST request will look something like this:
+```json
+{
+  "seven": 4,
+  "jaehee": 0,
+  "yoosung": 3,
+  "hyun": 0,
+  "jumin": 0,
+  "jihyun": 0,
+  "rika": 0,
+  "unknown": 0,
+  "saeran": 0
+}
+```
+Note that because Mystic Mess runs on the client, it is entirely possible for a user to spoof a request to a callback URL. It's entirely up to you to perform data validation as necessary!
 
 ## What Kinds of Data are Available?
 Various features of Mystic Mess might require some extra external data. All that available data is indexed below.
