@@ -547,7 +547,7 @@
     }
     const req = new XMLHttpRequest();
     try {
-      req.open('GET', processUrl(query.url), true);
+      req.open('GET', processUrl(decodeURIComponent(query.url)), true);
     } catch (e) {
       console.error(e);
       loaderText.innerText = e.message;
