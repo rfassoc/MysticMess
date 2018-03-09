@@ -62,16 +62,17 @@
     jumin: ['angry', 'cry', 'happy', 'wtf'],
   };
   class Member {
-    constructor(name, colour, avatar, right = false) {
+    constructor(name, colour, avatar, heart = false, right = false) {
       this.name = name;
       this.lcname = name.toLowerCase();
-      this.colour = colour;
+      this.colour = `#${colour}`;
       this.avatar = avatar;
+      this.heart = `#${heart}`;
       this.right = right;
     }
     
     send(content, options = {}) {
-      const msg = sendMsg(this, `<div class="msg-balloon" style="background-color: #${this.colour}; border-top-color: #${this.colour};">
+      const msg = sendMsg(this, `<div class="msg-balloon" style="background-color: ${this.colour}; border-top-color: ${this.colour};">
     <span class="msg-balloon-text">${content}</span>
 </div>`);
       if (options.classes) {
@@ -102,15 +103,15 @@
     }
   }
   const rfa = {
-    seven: new Member('707', 'fff1f1', 'img/avatar/707.png'),
-    jaehee: new Member('Jaehee Kang', 'fff5eb', 'img/avatar/jaehee.jpg'),
-    yoosung: new Member('Yoosung★', 'eefff4', 'img/avatar/yoosung.jpg'),
-    hyun: new Member('ZEN', 'e5e5e5', 'img/avatar/zen.jpg'),
-    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.png'),
-    jihyun: new Member('V', 'c9fbf8', 'img/avatar/v.jpg'),
+    seven: new Member('707', 'fff1f1', 'img/avatar/707.png', 'fe2626'),
+    jaehee: new Member('Jaehee Kang', 'fff5eb', 'img/avatar/jaehee.jpg', 'cfb742'),
+    yoosung: new Member('Yoosung★', 'eefff4', 'img/avatar/yoosung.jpg', '31ff26'),
+    hyun: new Member('ZEN', 'e5e5e5', 'img/avatar/zen.jpg', 'c9c9c9'),
+    jumin: new Member('Jumin Han', 'f2fdfe', 'img/avatar/jumin.png', 'a59aed'),
+    jihyun: new Member('V', 'c9fbf8', 'img/avatar/v.jpg', '50b3bd'),
     rika: new Member('Rika', 'fff6d7', 'img/avatar/question.jpg'),
     unknown: new Member('Unknown', 'f3e6fa', 'img/avatar/question.jpg'),
-    saeran: new Member('Ray', 'f3e6fa', 'img/avatar/question.jpg'),
+    saeran: new Member('Ray', 'f3e6fa', 'img/avatar/question.jpg', 'cc3a9f'),
   };
   for (const key of Object.keys(rfa)) rfa[key].key = key;
   rfa.findMember = name => rfa[name] || Object.values(rfa).find(m => m.lcname === name);
@@ -198,12 +199,21 @@
   const button = document.getElementById('msg-button');
   button.onclick = () => chatState.execute();
 
-  // shake animation stuff
+  // animation stuff
   let shakeTask;
   function doShake() {
     wrapper.classList.add('shake');
     if (shakeTask) window.clearTimeout(shakeTask);
-    window.setTimeout(() => wrapper.classList.remove('shake'), 750);
+    shakeTask = window.setTimeout(() => wrapper.classList.remove('shake'), 750);
+  }
+  let heartTask;
+  const heartContainer = document.getElementById('heart-container');
+  const heartElem = document.getElementById('heart');
+  function doHeart(colour) {
+    heartElem.style.backgroundColor = colour;
+    heartContainer.classList.add('show');
+    if (heartTask) window.clearTimeout(heartTask);
+    heartTask = window.setTimeout(() => heartContainer.classList.remove('show'), 850);
   }
 
   // chatroom event stuff
@@ -289,6 +299,18 @@
       state.waiting.activate({upstream: ctx, branches: this.branches, next});
     }
   }
+  class HeartEvent extends MessengerEvent {
+    constructor(author) {
+      super(0);
+      this.author = author;
+    }
+
+    execute(ctx, next) {
+      ctx.hearts[this.author.key]++;
+      doHeart(this.author.heart);
+      next();
+    }
+  }
 
   // parse url query
   const query = {};
@@ -301,6 +323,7 @@
     const mc = new Member(script.mc.name || 'MC',
       script.mc.colour || 'ffffed',
       script.mc.avatar || 'img/avatar/mc.jpg',
+      false,
       true);
     script.initialMembers.push(mc);
     const context = {
@@ -308,11 +331,16 @@
       members: new Set(script.initialMembers),
       activeEvent: null,
       queue: [...script.events],
+      hearts: {},
     };
+    for (const member of Object.values(rfa)) {
+      if (member.heart) context.hearts[member.key] = 0;
+    }
     (bgs[script.background] || bgs.day).activate();
     function prepareExecute(notFirst = true) {
       if (!context.queue.length) {
         state.done.activate();
+        console.log(context.hearts); // TODO do something meaningful with this?
         return;
       }
       context.activeEvent = context.queue.shift();
@@ -491,6 +519,11 @@
                   const author = rfa.findMember(name);
                   if (!author) throw new Error(`Invalid character sending image: ${name}`);
                   events.push(new ImageEvent(author, parsed[2]));
+                } else if (parsed = /^(\w+)\s*\<3$/.exec(line)) { // it's a heart
+                  const name = parsed[1].toLowerCase();
+                  const author = rfa.findMember(name);
+                  if (!author || !author.heart) throw new Error(`Invalid character receiving heart: ${name}`);
+                  events.push(new HeartEvent(author));
                 } else { // no clue what it is
                   throw new Error(`Unparsable line: ${line}`);
                 }
