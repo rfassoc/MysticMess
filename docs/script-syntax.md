@@ -74,6 +74,8 @@ yoosung|bhs!: that's mean
 ```
 Note that the flags section is strictly optional, but it certainly does make the chatroom look fancier.
 
+Another useful feature of chat lines is that the phrase `MC` will be automagically replaced with the name of your MC as configured in your header.
+
 #### Join/Leave Lines
 Join and leave lines describe a character entering or leaving the chatroom. They're formatted as follows:
 ```
