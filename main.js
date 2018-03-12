@@ -163,7 +163,9 @@
   state.playing.execute = () => state.paused.activate();
   state.paused.execute = () => state.playing.activate();
   state.waiting.execute = () => showReplies(stateCtx);
-  state.done.execute = () => {}; // TODO Figure out what to actually do with this
+  state.done.execute = () => {
+    if (stateCtx) document.location = stateCtx;
+  };
   state.playing.activate();
 
   // reply stuff
@@ -334,16 +336,18 @@
       hearts: {},
     };
     if (query.cb) context.callbackUrl = query.cb;
+    if (query.redir) context.redirectUrl = query.redir;
     for (const member of Object.values(rfa)) {
       if (member.heart) context.hearts[member.key] = 0;
     }
     (bgs[script.background] || bgs.day).activate();
     function prepareExecute(notFirst = true) {
       if (!context.queue.length) {
-        state.done.activate();
+        state.done.activate(context.redirectUrl);
         if (context.callbackUrl) {
           const req = new XMLHttpRequest();
           req.open('POST', context.callbackUrl, true);
+          req.withCredentials = true;
           req.send(context.hearts);
         }
         return;
@@ -573,6 +577,7 @@
         }
       }
     };
+    req.withCredentials = true;
     req.onerror = () => {
       loaderText.innerText = 'Failed to load script';
     };

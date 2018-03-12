@@ -54,6 +54,9 @@ The payload sent with the POST request will look something like this:
 ```
 Note that because Mystic Mess runs on the client, it is entirely possible for a user to spoof a request to a callback URL. It's entirely up to you to perform data validation as necessary!
 
+## Can I Redirect the Player Somewhere Else Afterwards?
+If you supply a redirect URL as the query parameter `redir`, Mystic Mess will redirect the player to that URL upon the "End" button being pressed.
+
 ## What Kinds of Data are Available?
 Various features of Mystic Mess might require some extra external data. All that available data is indexed below.
 
