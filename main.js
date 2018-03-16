@@ -372,6 +372,25 @@
       prepareExecute(false);
     }
     if (script.video) {
+      const ytApi = document.createElement('script');
+      ytApi.src = 'https://youtube.com/iframe_api';
+      document.body.appendChild(ytApi);
+      window.onYouTubeIframeAPIReady = () => {
+        const player = new YT.Player('youtube-embed', {
+          width: '1', height: '1', videoId: script.video,
+          events: {
+            onReady: e => {
+              e.target.playVideo();
+              go();
+            },
+            onStateChange: e => {
+              if (e.data !== YT.PlayerState.PLAYING) {
+                setTimeout(() => player.playVideo(), 10);
+              }
+            },
+          },
+        });
+      };
       const iframe = document.getElementById('youtube-embed');
       iframe.addEventListener('load', go);
       iframe.src = `https://youtube.com/embed/${script.video}?autoplay=1&controls=0&loop=1&playlist=${script.video}`;
