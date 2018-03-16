@@ -84,7 +84,7 @@
 
     sendEmote(name) {
       return sendMsg(this, `<div class="msg-emote">
-    <img class="emote" src="img/emote/${this.key}/${name}.gif"/>
+    <div class="emote" style="background-image: url('img/emote/${this.key}/${name}.gif');"></div>
 </div>`);
     }
 
