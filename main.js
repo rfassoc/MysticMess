@@ -481,6 +481,7 @@
               if (!line || !line.startsWith(prefix)) break;
               line = line.trim();
               n++;
+              if (!line.length) continue;
               if (branches) {
                 if (line === '$') {
                   events.push(new BranchEvent(branches));
