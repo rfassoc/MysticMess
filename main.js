@@ -314,6 +314,17 @@
     }
   }
 
+  // directives
+  class EndDirective extends MessengerEvent {
+    constructor() {
+      super(0);
+    }
+
+    execute(ctx, next) {
+      ctx.end();
+    }
+  }
+
   // parse url query
   const query = {};
   for (const entry of document.location.search.substring(1).split('&')) {
@@ -334,6 +345,15 @@
       activeEvent: null,
       queue: [...script.events],
       hearts: {},
+      end() {
+        state.done.activate(this.redirectUrl);
+        if (this.callbackUrl) {
+          const req = new XMLHttpRequest();
+          req.open('POST', this.callbackUrl, true);
+          req.withCredentials = true;
+          req.send(this.hearts);
+        }
+      },
     };
     if (query.cb) context.callbackUrl = query.cb;
     if (query.redir) context.redirectUrl = query.redir;
@@ -343,13 +363,7 @@
     (bgs[script.background] || bgs.day).activate();
     function prepareExecute(notFirst = true) {
       if (!context.queue.length) {
-        state.done.activate(context.redirectUrl);
-        if (context.callbackUrl) {
-          const req = new XMLHttpRequest();
-          req.open('POST', context.callbackUrl, true);
-          req.withCredentials = true;
-          req.send(context.hearts);
-        }
+        context.end();
         return;
       }
       context.activeEvent = context.queue.shift();
@@ -551,11 +565,21 @@
                   const author = rfa.findMember(name);
                   if (!author) throw new Error(`Invalid character sending image: ${name}`);
                   events.push(new ImageEvent(author, parsed[2]));
-                } else if (parsed = /^(\w+)\s*\<3$/.exec(line)) { // it's a heart
+                } else if (parsed = /^(\w+)\s*<3$/.exec(line)) { // it's a heart
                   const name = parsed[1].toLowerCase();
                   const author = rfa.findMember(name);
                   if (!author || !author.heart) throw new Error(`Invalid character receiving heart: ${name}`);
                   events.push(new HeartEvent(author));
+                } else if (parsed = /^#(\S+)(?:\s+(.+))?\s*$/.exec(line)) { // it's a directive
+                  console.log(line);
+                  const args = parsed[2] ? parsed[2].split(/\s+/g) : [];
+                  switch (parsed[1]) {
+                    case 'end':
+                      events.push(new EndDirective());
+                      break;
+                    default:
+                      throw new Error(`Invalid directive: ${parsed[1]}`);
+                  }
                 } else { // no clue what it is
                   throw new Error(`Unparsable line: ${line}`);
                 }

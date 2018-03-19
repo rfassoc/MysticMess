@@ -129,6 +129,17 @@ yoosung: that's mean
 yoosung <3
 ```
 
+#### Directive Line
+A directive line is a line prefixed with `#` that tells the script engine to do something. They're formatted as follows:
+```
+#<directive> [arguments...]
+```
+This table enumerates the currently available directives and their parameters:
+
+Directive | Arguments | Function
+-- | -- | --
+`#end` | N/A | Ends the script immediately; all events scripted to occur after an `#end` directive are ignored.
+
 ### Branches
 Script bodies are organized into "blocks", which are just contiguous and nest-able sections of lines. In fact, the entire script body is just a single huge block which may or may not have more blocks nested within it.
 
