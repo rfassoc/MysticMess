@@ -237,7 +237,7 @@
     }
 
     execute(ctx, next) {
-      this.author.send(this.text.replace(/\bMC\b/g, ctx.mc.name), this.options);
+      (this.author || ctx.mc).send(this.text.replace(/\bMC\b/g, ctx.mc.name), this.options);
       next();
     }
   }
